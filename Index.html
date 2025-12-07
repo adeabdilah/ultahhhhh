@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Birthday Surprise — Ultimate Version</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif;}
+html,body{height:100%; width:100%; background:#050507; color:white; overflow:hidden;}
+
+/* PASSWORD SCREEN */
+#passwordScreen{
+  position:fixed; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:#000; z-index:9999;
+  padding:20px; text-align:center;
+}
+#passwordScreen input{
+  padding:12px 18px; border-radius:10px; border:none; font-size:16px; text-align:center; max-width:250px; width:80%;
+}
+#passwordScreen button{
+  margin-top:12px; padding:10px 18px; border:none; border-radius:10px;
+  background:#ff6b91; color:#08121a; font-weight:700; cursor:pointer;
+}
+#pwdError{color:#ff6b6b; display:none; margin-top:10px;}
+
+/* START SCREEN */
+#start{
+  position:fixed; inset:0; display:none;
+  flex-direction:column; align-items:center; justify-content:center;
+  background:#000; cursor:pointer; z-index:999;
+  padding:20px; text-align:center;
+}
+#start h1{
+  font-size:calc(24px + 2vw); text-shadow:0 0 18px #a06bff;
+  animation:glow 2s infinite;
+}
+#start p{ font-size:calc(12px + 0.5vw); }
+
+@keyframes glow{
+  0%{ text-shadow:0 0 10px #a06bff; }
+  50%{ text-shadow:0 0 22px #6afff1; }
+  100%{ text-shadow:0 0 10px #a06bff; }
+}
+
+/* MAIN APP AREA */
+#app{ display:none; width:100vw; height:100vh; position:relative; overflow:hidden;}
+canvas#fw{ position:fixed; inset:0; pointer-events:none; z-index:2; }
+
+.ui-center{
+  position:absolute; left:50%; top:8%; transform:translateX(-50%);
+  z-index:20; text-align:center; width:90%;
+  max-width:480px;
+}
+.ui-center h2{ font-size:calc(20px + 2vw); font-weight:700; text-shadow:0 0 16px #b57aff;}
+.controls{ margin-top:12px; display:flex; justify-content:center; flex-wrap:wrap; gap:10px; }
+.btn{ padding:10px 16px; border:none; border-radius:10px;
+  background:linear-gradient(90deg,#ff6b91,#ffd86b); color:#000; font-weight:700; cursor:pointer; font-size:16px; min-width:130px;}
+
+/* GALLERY MODAL */
+#galleryContainer{
+  position:fixed; inset:0; display:none; padding:20px;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,.85); backdrop-filter:blur(6px); z-index:2000;
+}
+.gallery-frame{
+  width:90vw; max-width:600px; height:70vh; background:#0f0f12; border-radius:16px;
+  display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;
+}
+.g-close{ position:absolute; right:15px; top:10px; font-size:28px; cursor:pointer; z-index:50; }
+
+/* 3D CAROUSEL */
+.carousel{ position:absolute; inset:0; display:flex; justify-content:center; align-items:center; perspective:1200px;}
+#carouselStrip{ width:100%; height:100%; position:absolute; transform-style:preserve-3d;}
+.card{
+  position:absolute; top:50%; left:50%; transform-style:preserve-3d;
+  width:calc(150px + 20vw); max-width:320px; height:calc(225px + 30vw); max-height:480px;
+  border-radius:20px; overflow:hidden; cursor:pointer;
+  border:4px solid #d4af37;
+  box-shadow:0 0 15px rgba(212,175,55,0.6),
+             0 0 25px rgba(212,175,55,0.4),
+             0 0 50px rgba(212,175,55,0.2);
+  animation:auraPulse 3s infinite;
+}
+@keyframes auraPulse{
+  0%{box-shadow:0 0 20px rgba(212,175,55,.3);}
+  50%{box-shadow:0 0 40px rgba(212,175,55,.6);}
+  100%{box-shadow:0 0 20px rgba(212,175,55,.3);}
+}
+.card img{ width:100%; height:100%; object-fit:cover; }
+.card:hover{ transform: translateZ(40px) rotateY(0deg) !important; box-shadow:0 0 25px #fff,0 0 80px rgba(212,175,55,0.7); }
+
+/* Pause/Play button */
+.carousel-controls{
+  position:absolute; bottom:15px; left:50%; transform:translateX(-50%);
+  z-index:30; display:flex; gap:10px; flex-wrap:wrap;
+}
+.carousel-controls button{
+  padding:6px 12px; border:none; border-radius:8px;
+  background:rgba(255,255,255,0.15); color:#fff; font-weight:700; cursor:pointer;
+  backdrop-filter:blur(6px); min-width:70px;
+}
+</style>
+</head>
+<body>
+
+<div id="passwordScreen">
+  <h2 style="margin-bottom:10px">🔒 Masukkan Password</h2>
+  <input id="pwdInput" type="password" placeholder="Ketik password..." />
+  <button id="pwdBtn">Masuk</button>
+  <p id="pwdError">Password salah</p>
+</div>
+
+<div id="start">
+  <h1>🎁 Klik untuk Kejutan</h1>
+  <p style="opacity:.7">Musik akan menyala setelah klik</p>
+</div>
+
+<div id="app">
+  <canvas id="fw"></canvas>
+  <div class="ui-center">
+    <h2>✨مَبْرُوك أَلْفَ مَبْرُوك✨</h2>
+    <p style="opacity:.8;margin-bottom:10px">PIBESDEYYY INCIBOS🎉</p>
+    <div class="controls">
+      <button class="btn" onclick="burstFireworks()">Tap' kembang api 🎆</button>
+      <button class="btn" onclick="openGallery()">lihat foto📸</button>
+      <button class="btn" onclick="playSpecial()">doa dari orang ganteng 🎵</button>
+    </div>
+  </div>
+</div>
+
+<!-- Musik utama -->
+<audio id="music" src="https://files.catbox.moe/3mb3jf.mp4" preload="auto" loop></audio>
+<!-- Musik khusus -->
+<audio id="specialMusic" src="https://files.catbox.moe/2rkg1v.mp4" preload="auto"></audio>
+
+<div id="galleryContainer">
+  <div class="gallery-frame">
+    <span class="g-close" onclick="closeGallery()">✖</span>
+    <div class="carousel">
+      <div id="carouselStrip"></div>
+      <div class="carousel-controls">
+        <button id="pauseCarousel">Pause</button>
+        <button id="playCarousel">Play</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* PASSWORD LOGIC */
+pwdBtn.addEventListener("click", checkPwd);
+pwdInput.addEventListener("keypress", e => { if(e.key === "Enter") checkPwd(); });
+function checkPwd(){
+  if(pwdInput.value.trim() === "08121999"){ 
+    passwordScreen.style.display = "none"; 
+    start.style.display = "flex"; 
+  } else { 
+    pwdError.style.display="block"; 
+    setTimeout(() => pwdError.style.display="none", 1500); 
+  }
+}
+
+/* START CLICK → FIREWORKS + MUSIC */
+start.addEventListener("click", async ()=>{
+  start.style.opacity=0; setTimeout(()=> start.style.display="none", 600);
+  app.style.display="block";
+  try{ await music.play(); }catch{}
+  for(let i=0;i<22;i++){ setTimeout(()=> firework(Math.random()*innerWidth, Math.random()*innerHeight*0.5), i*80); }
+  setInterval(()=>{ firework(Math.random()*innerWidth, Math.random()*innerHeight*0.9); }, 400);
+});
+
+/* FIREWORK ENGINE */
+const canvas = document.getElementById("fw"); const ctx = canvas.getContext("2d");
+function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; } resize(); onresize = resize;
+let particles=[];
+function firework(x,y){ for(let i=0;i<130;i++){ particles.push({ x,y, angle:Math.random()*Math.PI*2, speed:Math.random()*6+2, life:120, color:`hsl(${Math.random()*360},100%,65%)` }); } }
+function burstFireworks(){ for(let i=0;i<6;i++){ setTimeout(()=> firework(Math.random()*innerWidth, Math.random()*innerHeight*0.6), i*200); } }
+function animate(){ ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach((p,i)=>{ p.x+=Math.cos(p.angle)*p.speed; p.y+=Math.sin(p.angle)*p.speed; p.speed*=0.96; p.life--; ctx.globalAlpha=p.life/120; ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,3,3); if(p.life<=0) particles.splice(i,1); }); requestAnimationFrame(animate); } animate();
+
+/* GALLERY 3D */
+const photoList = [
+"https://files.catbox.moe/egycfu.jpg",
+"https://files.catbox.moe/gibpih.jpg",
+"https://files.catbox.moe/0lnddb.jpg",
+"https://files.catbox.moe/tjrgf5.jpg",
+"https://files.catbox.moe/09gced.jpg"
+];
+
+let carouselAnimId;
+let isPaused = false;
+
+function openGallery(){ initCarousel(); galleryContainer.style.display="flex"; }
+function closeGallery(){ galleryContainer.style.display="none"; carouselStrip.innerHTML=""; if(carouselAnimId) cancelAnimationFrame(carouselAnimId); isPaused=false; }
+
+function initCarousel(){
+  const strip=document.getElementById("carouselStrip");
+  strip.innerHTML="";
+  const n=photoList.length, radius=380;
+  for(let i=0;i<n;i++){
+    const card=document.createElement("div"); card.className="card";
+    const img=document.createElement("img"); img.src=photoList[i];
+    const angle=(i/n)*Math.PI*2;
+    card.style.transform=`translate(-50%,-50%) rotateY(${angle}rad) translateZ(${radius}px)`;
+    card.appendChild(img); strip.appendChild(card);
+  }
+
+  let rot=0;
+  function rotate(){ 
+    if(!isPaused){
+      rot+=0.002;
+      strip.style.transform=`translateZ(-430px) rotateY(${rot}rad)`; 
+    }
+    carouselAnimId = requestAnimationFrame(rotate); 
+  }
+  rotate();
+
+  let startX=0;
+  document.addEventListener("mousedown",e=> startX=e.clientX);
+  document.addEventListener("mousemove",e=>{ if(e.buttons===1){ let dx=e.clientX-startX; rot+=dx*0.003; startX=e.clientX; } });
+  document.addEventListener("touchstart",e=> startX=e.touches[0].clientX);
+  document.addEventListener("touchmove",e=>{ let dx=e.touches[0].clientX-startX; rot+=dx*0.003; startX=e.touches[0].clientX; });
+
+  // Pause / Play
+  document.getElementById("pauseCarousel").onclick = ()=>{ isPaused=true; }
+  document.getElementById("playCarousel").onclick = ()=>{ isPaused=false; }
+}
+
+/* LAGU KHUSUS */
+const music = document.getElementById("music");
+const specialMusic = document.getElementById("specialMusic");
+
+function playSpecial(){
+  music.pause(); // hentikan musik utama
+  specialMusic.currentTime = 0;
+  specialMusic.play();
+  specialMusic.onended = () => {
+    music.play(); // kembali ke musik utama
+  }
+}
+</script>
+
+</body>
+</html>
